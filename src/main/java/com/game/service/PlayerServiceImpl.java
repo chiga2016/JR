@@ -6,9 +6,11 @@ import com.game.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
@@ -22,7 +24,7 @@ public class PlayerServiceImpl implements PlayerService {
     PlayerDao playerDao;
 
     @Override
-    public void create(Player player) {
+    public boolean create(Player player) {
 
         int level = (int) ((Math.sqrt((2500 + player.getExperience()*200))-50)/100);
         int untilNextLevel=50*(level+1)*(level+2)-player.getExperience();
@@ -32,7 +34,12 @@ public class PlayerServiceImpl implements PlayerService {
         if(player.getBanned()==null){
             player.setBanned(false);
         }
+        if (!validation(player)){
+            System.out.println("Валидация не пройдена");
+            return false;
+        }
         playerDao.save(player);
+        return true;
 //        final long playerId = CLIENT_ID_HOLDER.incrementAndGet();
 //        player.setId(playerId);
 //        CLIENT_REPOSITORY_MAP.put(playerId, player);
@@ -44,10 +51,24 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public List<Player> readAllOrdered(PlayerOrder order, String pageNumber, String limit) {
+    public List<Player> readAllOrdered(PlayerOrder order, PlayerFilter playerFilter, String pageNumber, String limit) {
         int pageNumber1 = Integer.parseInt(pageNumber);
         int limit1 = Integer.parseInt(limit);
         List<Player> list = playerDao.findAll();
+        Stream<Player> stream = list.stream();
+        if(playerFilter!=null){
+
+            if(playerFilter.getName()!=null){
+                stream = stream.filter((s) -> s.getName().contains(playerFilter.getName()));
+            }
+            if(playerFilter.getTitle()!=null){
+                stream = stream.filter((s) -> s.getName().contains(playerFilter.getName()));
+            }
+
+
+        }
+        list = stream.collect(Collectors.toList());
+
         switch (order){
             case ID: list =list.stream().sorted(new Comparator<Player>() {
                 @Override
@@ -104,6 +125,17 @@ public class PlayerServiceImpl implements PlayerService {
                 playerFound.setBirthday(player.getBirthday()!=null? player.getBirthday():playerFound.getBirthday());
                 playerFound.setBanned(player.getBanned()!=null? player.getBanned():playerFound.getBanned());
                 playerFound.setExperience(player.getExperience()!=null? player.getExperience():playerFound.getExperience());
+
+                int level = (int) ((Math.sqrt((2500 + playerFound.getExperience()*200))-50)/100);
+                int untilNextLevel=50*(level+1)*(level+2)-playerFound.getExperience();
+                playerFound.setLevel(level);
+                playerFound.setUntilNextLevel(untilNextLevel);
+
+                if (!validation(playerFound)){
+                    System.out.println("Валидация не пройдена");
+                    return false;
+                }
+
                 playerDao.saveAndFlush(playerFound);
                 return true;
             }
@@ -123,4 +155,44 @@ public class PlayerServiceImpl implements PlayerService {
             return false;
         }
     }
+
+    @Override
+    public boolean validation(Player player) {
+        try {
+            if(player.getName()==null||player.getTitle()==null||player.getExperience()==null||player.getProfession()==null||player.getRace()==null||player.getBirthday()==null){
+                return false;
+            }
+            if(player.getName().isEmpty()){
+                return false;
+            }
+
+            if (player.getName().length() > 12) {
+                System.out.println("Имя длиннее 12 символов");
+                return false;
+            }
+            if (player.getTitle().length() > 30) {
+                System.out.println("Титул длиннее 30 символов");
+                return false;
+            }
+            if (player.getExperience() < 0 || player.getExperience() > 10000000) {
+                System.out.println("Опыт не укладывается в диапазон 0 .. 10 000 000");
+                return false;
+            }
+            if (player.getBirthday().after(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.3001")))
+            {
+                System.out.println("ДР больше 01.01.3001");
+                return false;
+            }
+            if(player.getBirthday().before(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2000"))){
+                System.out.println("ДР меньше 01.01.2000");
+                return false;
+            }
+
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return true;
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package com.game.service;
 
+import com.game.controller.PlayerFilter;
 import com.game.controller.PlayerOrder;
 import com.game.entity.*;
 
@@ -10,7 +11,7 @@ public interface PlayerService {
      * Создает нового клиента
      * @param player - клиент для создания
      */
-    void create(Player player);
+    boolean create(Player player);
 
     /**
      * Возвращает список всех имеющихся клиентов
@@ -18,7 +19,7 @@ public interface PlayerService {
      */
     List<Player> readAll();
 
-    List<Player> readAllOrdered(PlayerOrder order, String pageSize, String limit);
+    List<Player> readAllOrdered(PlayerOrder order, PlayerFilter playerFilter, String pageNumber, String limit);
 
     /**
      * Возвращает клиента по его ID
@@ -42,4 +43,6 @@ public interface PlayerService {
      * @return - true если клиент был удален, иначе false
      */
     boolean delete(long id);
+
+    boolean validation (Player player);
 }

@@ -25,8 +25,11 @@ public class PlayerController {
 // name=player1&title=p1&after=535852800000&pageNumber=0&pageSize=3&order=ID
     @PostMapping(value = "/rest/players")
     public ResponseEntity<?> create(@RequestBody Player player) {
-        playerService.create(player);
-        return new ResponseEntity<>(HttpStatus.OK);
+        boolean result = playerService.create(player);
+        //return new ResponseEntity<>(HttpStatus.OK);
+        return result
+                ? new ResponseEntity<>(HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping(value = "/rest/players")
@@ -89,11 +92,12 @@ public class PlayerController {
         }
     }
         //final List<Player> clients = playerService.readAll();
-        if(playerFilter!=null){
-            System.out.println(playerFilter);
-        }
+        System.out.println(playerFilter);
+        List<Player> resultList = playerService.readAllOrdered(PlayerOrder.valueOf(order), playerFilter, pageNumber, pageSize );
 
-        List<Player> resultList = playerService.readAllOrdered(PlayerOrder.valueOf(order), pageNumber, pageSize );
+
+
+
 //        System.out.println("pageNumber " + pageNumber);
 //        System.out.println("order " + order);
 //        System.out.println("pageSize " + pageSize);
@@ -125,9 +129,12 @@ public class PlayerController {
     public ResponseEntity<?> update(@PathVariable(name = "id") int id, @RequestBody Player player) {
         final boolean updated = playerService.update(player, id);
 
+//        return updated
+//                ? new ResponseEntity<>(HttpStatus.OK)
+//                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
         return updated
                 ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+                : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping(value = "/rest/players/{id}")

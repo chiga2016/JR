@@ -5,6 +5,7 @@ import com.game.entity.Race;
 
 import javax.persistence.*;
 import java.util.Date;
+
 @Entity
 public class Player {
     @Id
