@@ -16,7 +16,11 @@ import java.util.List;
 public class PlayerController {
         private final PlayerService playerService;
 
-@Autowired
+
+    public PlayerService getPlayerService() {
+        return playerService;
+    }
+    @Autowired
     public PlayerController(PlayerService playerService) {
         this.playerService = playerService;
     }
@@ -73,7 +77,7 @@ public class PlayerController {
         if(!before.isEmpty()){
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(Long.parseLong(before));
-            playerFilter.setAfter(c.getTime());
+            playerFilter.setBefore(c.getTime());
         }
         if(!banned.isEmpty()){
             playerFilter.setBanned(Boolean.valueOf(banned));
@@ -96,15 +100,10 @@ public class PlayerController {
         List<Player> resultList = playerService.readAllOrdered(PlayerOrder.valueOf(order), playerFilter, pageNumber, pageSize );
 
 
-
-
 //        System.out.println("pageNumber " + pageNumber);
 //        System.out.println("order " + order);
 //        System.out.println("pageSize " + pageSize);
 //        resultList = (new ComparePlayer()).sortPlayers(clients, PlayerOrder.valueOf(order),pageSize );
-
-
-
         return resultList != null &&  !resultList.isEmpty()
                 ? new ResponseEntity<>(resultList, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -121,8 +120,9 @@ public class PlayerController {
 
     @GetMapping(value = "/rest/players/count")
     public Integer getCount() {
-        List<Player> listPlayers = playerService.readAll();
-        return listPlayers.size();
+        //List<Player> listPlayers = playerService.readAll();
+        //return listPlayers.size();
+        return playerService.getCountPlayers();
     }
 
     @PostMapping(value = "/rest/players/{id}")

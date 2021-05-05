@@ -14,11 +14,16 @@ import java.util.stream.Stream;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
-    // Хранилище клиентов
-    //private static final Map<Long, Player> CLIENT_REPOSITORY_MAP = new HashMap<>();
+    private int countPlayers=0;
 
-    // Переменная для генерации ID клиента
-    //private static final AtomicInteger CLIENT_ID_HOLDER = new AtomicInteger();
+    @Override
+    public int getCountPlayers() {
+        return countPlayers;
+    }
+
+    public void setCountPlayers(int countPlayers) {
+        this.countPlayers = countPlayers;
+    }
 
     @Autowired
     PlayerDao playerDao;
@@ -40,6 +45,7 @@ public class PlayerServiceImpl implements PlayerService {
         }
         playerDao.save(player);
         return true;
+
 //        final long playerId = CLIENT_ID_HOLDER.incrementAndGet();
 //        player.setId(playerId);
 //        CLIENT_REPOSITORY_MAP.put(playerId, player);
@@ -62,13 +68,38 @@ public class PlayerServiceImpl implements PlayerService {
                 stream = stream.filter((s) -> s.getName().contains(playerFilter.getName()));
             }
             if(playerFilter.getTitle()!=null){
-                stream = stream.filter((s) -> s.getName().contains(playerFilter.getName()));
+                stream = stream.filter((s) -> s.getTitle().contains(playerFilter.getTitle()));
             }
-
-
+            if(playerFilter.getProfession()!=null){
+                stream = stream.filter((s) -> s.getProfession().equals(playerFilter.getProfession()));
+            }
+            if(playerFilter.getRace()!=null){
+                stream = stream.filter((s) -> s.getRace().equals(playerFilter.getRace()));
+            }
+            if(playerFilter.getBefore()!=null){
+                stream = stream.filter((s) -> s.getBirthday().before(playerFilter.getBefore()));
+            }
+            if(playerFilter.getAfter()!=null){
+                stream = stream.filter((s) -> s.getBirthday().after(playerFilter.getAfter()));
+            }
+            if(playerFilter.getMinExperience()!=null){
+                stream = stream.filter((s) -> s.getExperience() >= (playerFilter.getMinExperience()));
+            }
+            if(playerFilter.getMaxExperience()!=null){
+                stream = stream.filter((s) -> s.getExperience() <= (playerFilter.getMaxExperience()));
+            }
+            if(playerFilter.getMinLevel()!=null){
+                stream = stream.filter((s) -> s.getLevel() >= (playerFilter.getMinLevel()));
+            }
+            if(playerFilter.getMaxLevel()!=null){
+                stream = stream.filter((s) -> s.getLevel() <= (playerFilter.getMaxLevel()));
+            }
+            if(playerFilter.isBanned()){
+                stream = stream.filter((s) -> s.getBanned() ==true);
+            }
         }
         list = stream.collect(Collectors.toList());
-
+        setCountPlayers(list.size());
         switch (order){
             case ID: list =list.stream().sorted(new Comparator<Player>() {
                 @Override

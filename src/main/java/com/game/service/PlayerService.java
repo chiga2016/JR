@@ -7,6 +7,8 @@ import com.game.entity.*;
 import java.util.List;
 
 public interface PlayerService {
+    int getCountPlayers();
+
     /**
      * Создает нового клиента
      * @param player - клиент для создания
