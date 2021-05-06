@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -80,7 +81,7 @@ public class PlayerController {
             playerFilter.setBefore(c.getTime());
         }
         if(!banned.isEmpty()){
-            playerFilter.setBanned(Boolean.valueOf(banned));
+            playerFilter.setBanned(banned);
         }
         if(!minExperience.isEmpty()){
             playerFilter.setMinExperience(Integer.parseInt(minExperience));
@@ -104,9 +105,13 @@ public class PlayerController {
 //        System.out.println("order " + order);
 //        System.out.println("pageSize " + pageSize);
 //        resultList = (new ComparePlayer()).sortPlayers(clients, PlayerOrder.valueOf(order),pageSize );
+
+//        return resultList != null &&  !resultList.isEmpty()
+//                ? new ResponseEntity<>(resultList, HttpStatus.OK)
+//                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
         return resultList != null &&  !resultList.isEmpty()
                 ? new ResponseEntity<>(resultList, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                : new ResponseEntity<>(new ArrayList<Player>(),HttpStatus.OK);
     }
 
     @GetMapping(value = "/rest/players/{id}")

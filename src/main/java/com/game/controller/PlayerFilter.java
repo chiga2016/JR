@@ -14,7 +14,7 @@ public class PlayerFilter
     private Profession profession;
     private Date after;
     private Date before;
-    private boolean banned;
+    private String banned;
     private Integer minExperience;
     private Integer maxExperience;
     private Integer minLevel;
@@ -71,11 +71,11 @@ public class PlayerFilter
         this.before = before;
     }
 
-    public boolean isBanned() {
+    public String getBanned() {
         return banned;
     }
 
-    public void setBanned(boolean banned) {
+    public void setBanned(String banned) {
         this.banned = banned;
     }
 

@@ -94,12 +94,15 @@ public class PlayerServiceImpl implements PlayerService {
             if(playerFilter.getMaxLevel()!=null){
                 stream = stream.filter((s) -> s.getLevel() <= (playerFilter.getMaxLevel()));
             }
-            if(playerFilter.isBanned()){
-                stream = stream.filter((s) -> s.getBanned() ==true);
+            if(playerFilter.getBanned()!=null){
+                stream = stream.filter((s) -> s.getBanned().equals(Boolean.valueOf(playerFilter.getBanned())));
             }
         }
         list = stream.collect(Collectors.toList());
-        setCountPlayers(list.size());
+        if(list!=null){
+            setCountPlayers(list.size());
+        }
+
         switch (order){
             case ID: list =list.stream().sorted(new Comparator<Player>() {
                 @Override
