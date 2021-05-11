@@ -1,11 +1,13 @@
 package com.game.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.game.entity.Profession;
 import com.game.entity.Race;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
-
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 public class Player {
     @Id
@@ -116,5 +118,30 @@ public class Player {
 
     public void setBanned(Boolean banned) {
         this.banned = banned;
+    }
+
+    public boolean isNull (){
+        if(id==null&&name==null&&title==null&&race==null&&profession==null&&experience==null&&level==null&&untilNextLevel==null&&birthday==null&&banned==null){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        String bd = birthday!=null? new SimpleDateFormat("dd.MM.yyyy").format(birthday):"";
+        return "Player{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", title='" + title + '\'' +
+                ", race=" + race +
+                ", profession=" + profession +
+                ", experience=" + experience +
+                ", level=" + level +
+                ", untilNextLevel=" + untilNextLevel +
+                ", birthday=" + bd  +
+                ", banned=" + banned +
+                '}';
     }
 }

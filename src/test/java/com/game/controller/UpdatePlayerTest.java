@@ -121,6 +121,7 @@ public class UpdatePlayerTest extends AbstractTest {
     @Test
     public void updatePlayerLevelTest() throws Exception {
         PlayerInfoTest expected = mapper.readValue(String.format(TestsHelper.NORMAL_JSON_WITH_ID, 23), PlayerInfoTest.class);
+        System.out.println(expected);
         expected.level = 35;
         expected.untilNextLevel = 2614;
 

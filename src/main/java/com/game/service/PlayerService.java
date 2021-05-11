@@ -30,6 +30,8 @@ public interface PlayerService {
      */
     Player read(long id);
 
+    boolean existsById(long id);
+
     /**
      * Обновляет клиента с заданным ID,
      * в соответствии с переданным клиентом

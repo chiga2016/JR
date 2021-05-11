@@ -1,13 +1,18 @@
 package com.game.controller;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.entity.*;
 import com.game.service.PlayerService;
 import com.game.util.ComparePlayer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -30,7 +35,20 @@ public class PlayerController {
 // name=player1&title=p1&after=535852800000&pageNumber=0&pageSize=3&order=ID
     @PostMapping(value = "/rest/players")
     public ResponseEntity<?> create(@RequestBody Player player) {
-        boolean result = playerService.create(player);
+        boolean result = false;
+        try {
+            if(player!=null) {
+                //System.out.println(player);
+                if(playerService.validation(player)) {
+                    result = playerService.create(player);
+                }
+            }
+        }
+        catch (Exception exception){
+            exception.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
         //return new ResponseEntity<>(HttpStatus.OK);
         return result
                 ? new ResponseEntity<>(HttpStatus.OK)
@@ -57,7 +75,143 @@ public class PlayerController {
     ) {
         PlayerFilter playerFilter=null;
     if(!name.isEmpty()||!title.isEmpty()||!race.isEmpty()||!profession.isEmpty()||!after.isEmpty()||!before.isEmpty()||!banned.isEmpty()||!minExperience.isEmpty()||!maxExperience.isEmpty()||!minLevel.isEmpty()||!maxLevel.isEmpty()){
-        playerFilter = new PlayerFilter();
+        playerFilter = getPlayerFilter( name, title, race, profession, after, before, banned, minExperience,maxExperience, minLevel, maxLevel);
+    }
+        //final List<Player> clients = playerService.readAll();
+        //System.out.println(playerFilter);
+        List<Player> resultList = playerService.readAllOrdered(PlayerOrder.valueOf(order), playerFilter, pageNumber, pageSize );
+
+
+//        System.out.println("pageNumber " + pageNumber);
+//        System.out.println("order " + order);
+//        System.out.println("pageSize " + pageSize);
+//        resultList = (new ComparePlayer()).sortPlayers(clients, PlayerOrder.valueOf(order),pageSize );
+
+//        return resultList != null &&  !resultList.isEmpty()
+//                ? new ResponseEntity<>(resultList, HttpStatus.OK)
+//                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return resultList != null &&  !resultList.isEmpty()
+                ? new ResponseEntity<>(resultList, HttpStatus.OK)
+                : new ResponseEntity<>(new ArrayList<Player>(),HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/rest/players/{id}")
+    public ResponseEntity<Player> read(@PathVariable(name = "id") int id) {
+
+        if(id==0){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        final Player player = playerService.read(id);
+
+        return player != null
+                ? new ResponseEntity<>(player, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping(value = "/rest/players/count")
+    public Integer getCount(
+            @RequestParam(name = "name", defaultValue = "") String name,
+            @RequestParam(name = "title", defaultValue = "") String title,
+            @RequestParam(name = "race", defaultValue = "") String race,
+            @RequestParam(name = "profession", defaultValue = "") String profession,
+            @RequestParam(name = "after", defaultValue = "") String after,
+            @RequestParam(name = "before", defaultValue = "") String before,
+            @RequestParam(name = "banned", defaultValue = "") String banned,
+            @RequestParam(name = "minExperience", defaultValue = "") String minExperience,
+            @RequestParam(name = "maxExperience", defaultValue = "") String maxExperience,
+            @RequestParam(name = "minLevel", defaultValue = "") String minLevel,
+            @RequestParam(name = "maxLevel", defaultValue = "") String maxLevel
+    ) {
+        //List<Player> listPlayers = playerService.readAll();
+        //return listPlayers.size();
+        PlayerFilter playerFilter=null;
+        if(!name.isEmpty()||!title.isEmpty()||!race.isEmpty()||!profession.isEmpty()||!after.isEmpty()||!before.isEmpty()||!banned.isEmpty()||!minExperience.isEmpty()||!maxExperience.isEmpty()||!minLevel.isEmpty()||!maxLevel.isEmpty()){
+            playerFilter = getPlayerFilter( name, title, race, profession, after, before, banned, minExperience,maxExperience, minLevel, maxLevel);
+        }
+        //final List<Player> clients = playerService.readAll();
+        //System.out.println(playerFilter);
+        List<Player> resultList = playerService.readAllOrdered(null, playerFilter, null, null );
+        return playerService.getCountPlayers();
+    }
+
+    //@PostMapping(value = "/rest/players/{id}")
+    @RequestMapping(value = "/rest/players/{id}", method = RequestMethod.POST/*, produces = "application/json; charset=utf-8"*/)
+    //@ResponseBody
+    public ResponseEntity<?> update(@PathVariable(name = "id") int id, @RequestBody Player player) {
+//        HttpHeaders responseHeaders = new HttpHeaders();
+//        responseHeaders.add("Content-Type", "application/json; charset=utf-8");
+        //responseHeaders.setLocation(builder.path("/admin/{id}").buildAndExpand(adminCreatedEvent.getAdminId()).toUri());
+        //return new ResponseEntity<Player>( responseHeaders, HttpStatus.CREATED);
+//        System.out.println("Апдейтим игрока №" + id);
+//        if(player==null||player.isNull()){
+//            System.out.println("Игрок пустой");
+//        } else {
+//            System.out.println(player);
+//        }
+        try {
+            boolean updated = false;
+            if (id == 0) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            if (player.isNull()) {
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            if (player.getExperience() != null) {
+                if (player.getExperience() < 0 || player.getExperience() > 10000000) {
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+            }
+            if (player.getBirthday() != null) {
+                if (player.getBirthday().after(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.3001"))) {
+                    //System.out.println("ДР больше 01.01.3001");
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+                if (player.getBirthday().before(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2000"))) {
+                    //System.out.println("ДР меньше 01.01.2000");
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+            }
+            if (!playerService.existsById(id)) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            if (!player.isNull()) {
+                updated = playerService.update(player, id);
+            } else {
+                new ResponseEntity<>(HttpStatus.OK);
+            }
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/rest/players/{id}")
+    public ResponseEntity<?> delete(@PathVariable(name = "id") int id) {
+
+        if(id==0){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        final boolean deleted = playerService.delete(id);
+
+        return deleted
+                ? new ResponseEntity<>(HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    public static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch(NumberFormatException e){
+            return false;
+        }
+    }
+
+    public PlayerFilter getPlayerFilter (
+            String name,String title,String race,String profession,String after,String before,String banned,String minExperience,
+            String maxExperience,String minLevel,String maxLevel
+    ){
+       PlayerFilter playerFilter = new PlayerFilter();
         if(!name.isEmpty()){
             playerFilter.setName(name);
         }
@@ -95,69 +249,7 @@ public class PlayerController {
         if(!maxLevel.isEmpty()){
             playerFilter.setMaxLevel(Integer.parseInt(maxLevel));
         }
-    }
-        //final List<Player> clients = playerService.readAll();
-        System.out.println(playerFilter);
-        List<Player> resultList = playerService.readAllOrdered(PlayerOrder.valueOf(order), playerFilter, pageNumber, pageSize );
-
-
-//        System.out.println("pageNumber " + pageNumber);
-//        System.out.println("order " + order);
-//        System.out.println("pageSize " + pageSize);
-//        resultList = (new ComparePlayer()).sortPlayers(clients, PlayerOrder.valueOf(order),pageSize );
-
-//        return resultList != null &&  !resultList.isEmpty()
-//                ? new ResponseEntity<>(resultList, HttpStatus.OK)
-//                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        return resultList != null &&  !resultList.isEmpty()
-                ? new ResponseEntity<>(resultList, HttpStatus.OK)
-                : new ResponseEntity<>(new ArrayList<Player>(),HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/rest/players/{id}")
-    public ResponseEntity<Player> read(@PathVariable(name = "id") int id) {
-        final Player player = playerService.read(id);
-
-        return player != null
-                ? new ResponseEntity<>(player, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
-
-    @GetMapping(value = "/rest/players/count")
-    public Integer getCount() {
-        //List<Player> listPlayers = playerService.readAll();
-        //return listPlayers.size();
-        return playerService.getCountPlayers();
-    }
-
-    @PostMapping(value = "/rest/players/{id}")
-    public ResponseEntity<?> update(@PathVariable(name = "id") int id, @RequestBody Player player) {
-        final boolean updated = playerService.update(player, id);
-
-//        return updated
-//                ? new ResponseEntity<>(HttpStatus.OK)
-//                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
-        return updated
-                ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    @DeleteMapping(value = "/rest/players/{id}")
-    public ResponseEntity<?> delete(@PathVariable(name = "id") int id) {
-        final boolean deleted = playerService.delete(id);
-
-        return deleted
-                ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
-    }
-
-    public static boolean isNumeric(String str) {
-        try {
-            Double.parseDouble(str);
-            return true;
-        } catch(NumberFormatException e){
-            return false;
-        }
+        return playerFilter;
     }
 
 }
