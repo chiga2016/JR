@@ -13,7 +13,7 @@ public interface PlayerService {
      * Создает нового клиента
      * @param player - клиент для создания
      */
-    boolean create(Player player);
+    Player create(Player player);
 
     /**
      * Возвращает список всех имеющихся клиентов
@@ -39,7 +39,7 @@ public interface PlayerService {
      * @param id - id клиента которого нужно обновить
      * @return - true если данные были обновлены, иначе false
      */
-    boolean update(Player player, long id);
+    Player update(Player player, long id);
 
     /**
      * Удаляет клиента с заданным ID

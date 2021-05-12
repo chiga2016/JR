@@ -89,6 +89,8 @@ public class UpdatePlayerTest extends AbstractTest {
         expected.level = 35;
         expected.untilNextLevel = 2614;
 
+        System.out.println(expected);
+
         ResultActions resultActions = mockMvc.perform(post("/rest/players/5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format(TestsHelper.NORMAL_JSON_WITH_ID, 8L)))
@@ -106,6 +108,7 @@ public class UpdatePlayerTest extends AbstractTest {
     public void updatePlayerEmptyBodyTest() throws Exception {
         PlayerInfoTest expected = testsHelper.getPlayerInfosById(17);
 
+        //System.out.println(expected);
         ResultActions resultActions = mockMvc.perform(post("/rest/players/17")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
@@ -169,8 +172,13 @@ public class UpdatePlayerTest extends AbstractTest {
         Profession newProfession = Profession.ROGUE;
         long newBirthday = 1178571600000L;
 
+        //System.out.println("player info test " + playerInfoTest);
+
         PlayerInfoTest expected = new PlayerInfoTest(playerInfoTest.id, playerInfoTest.name, newTitle, newRace, newProfession, newBirthday,
                 playerInfoTest.banned, playerInfoTest.experience, playerInfoTest.level, playerInfoTest.untilNextLevel);
+
+//        System.out.println("expected " + expected);
+//        System.out.println("content " + String.format(TestsHelper.JSON_SKELETON_2, newTitle, newRace, newProfession, newBirthday));
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/rest/players/" + playerInfoTest.id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -180,6 +188,8 @@ public class UpdatePlayerTest extends AbstractTest {
         String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
         PlayerInfoTest actual = mapper.readValue(contentAsString, PlayerInfoTest.class);
 
+        //System.out.println("actual " + actual);
+        //System.out.println("");
         assertEquals("При запросе POST /rest/players/{id} корабль должен обновляться и рейтинг пересчитываться", expected, actual);
     }
 }

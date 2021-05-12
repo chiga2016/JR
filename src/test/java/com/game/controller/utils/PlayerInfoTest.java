@@ -68,4 +68,33 @@ public class PlayerInfoTest {
                 ", birthday=" + birthday +
                 '}';
     }
+
+//    @Override
+//    public String toString() {
+//        LocalDate birthday = Instant.ofEpochMilli(this.birthday).atZone(ZoneId.systemDefault()).toLocalDate();
+//        return "PlayerInfoTest{" +
+//                "id=" + id +
+//                ", name='" + name + '\'' +
+//                ", title='" + title + '\'' +
+//                ", race='" + race + '\'' +
+//                ", profession='" + profession + '\'' +
+//                ", birthday=" + birthday +
+//                ", banned='" + banned + '\'' +
+//                ", experience='" + experience + '\'' +
+//                ", level='" + level + '\'' +
+//                ", untilNextLevel='" + untilNextLevel + '\'' +
+//                '}';
+//    }
 }
+/*
+    public Long id;
+    public String name;
+    public String title;
+    public Race race;
+    public Profession profession;
+    public Long birthday;
+    public Boolean banned;
+    public Integer experience;
+    public Integer level;
+    public Integer untilNextLevel;
+ */

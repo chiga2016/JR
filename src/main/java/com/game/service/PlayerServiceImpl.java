@@ -29,7 +29,7 @@ public class PlayerServiceImpl implements PlayerService {
     PlayerDao playerDao;
 
     @Override
-    public boolean create(Player player) {
+    public Player create(Player player) {
 
         int level = (int) ((Math.sqrt((2500 + player.getExperience()*200))-50)/100);
         int untilNextLevel=50*(level+1)*(level+2)-player.getExperience();
@@ -41,10 +41,10 @@ public class PlayerServiceImpl implements PlayerService {
         }
         if (!validation(player)){
             System.out.println("Валидация не пройдена");
-            return false;
+            return null;
         }
         playerDao.save(player);
-        return true;
+        return player;
 
 //        final long playerId = CLIENT_ID_HOLDER.incrementAndGet();
 //        player.setId(playerId);
@@ -159,7 +159,7 @@ public class PlayerServiceImpl implements PlayerService {
 
 
     @Override
-    public boolean update(Player player, long id) {
+    public Player update(Player player, long id) {
 
         if (playerDao.existsById(id)) {
             Player playerFound = playerDao.findPlayerById(id);
@@ -171,24 +171,30 @@ public class PlayerServiceImpl implements PlayerService {
                 playerFound.setBirthday(player.getBirthday()!=null? player.getBirthday():playerFound.getBirthday());
                 playerFound.setBanned(player.getBanned()!=null? player.getBanned():playerFound.getBanned());
                 playerFound.setExperience(player.getExperience()!=null? player.getExperience():playerFound.getExperience());
+                int level=0;int untilNextLevel=0;
+                if(player.getExperience()!=null){
+                     level = (int) ((Math.sqrt((2500 + player.getExperience()*200))-50)/100);
+                     untilNextLevel=50*(level+1)*(level+2)-player.getExperience();
+                } else {
+                    level = (int) ((Math.sqrt((2500 + playerFound.getExperience()*200))-50)/100);
+                    untilNextLevel=50*(level+1)*(level+2)-playerFound.getExperience();
+                }
 
-                int level = (int) ((Math.sqrt((2500 + player.getExperience()*200))-50)/100);
-                int untilNextLevel=50*(level+1)*(level+2)-player.getExperience();
                 playerFound.setLevel(level);
                 playerFound.setUntilNextLevel(untilNextLevel);
 
-                if (!validation(playerFound)){
-                    //System.out.println("Валидация не пройдена");
-                    return false;
-                }
+//                if (!validation(playerFound)){
+//                    //System.out.println("Валидация не пройдена");
+//                    return false;
+//                }
 
                 playerDao.saveAndFlush(playerFound);
-                return true;
+                return playerFound;
             }
 //            player.setId(id);
 //            CLIENT_REPOSITORY_MAP.put(id, player);
         }
-        return false;
+        return player;
     }
 
     @Override

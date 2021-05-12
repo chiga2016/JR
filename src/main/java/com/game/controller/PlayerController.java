@@ -2,9 +2,11 @@ package com.game.controller;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.game.entity.*;
 import com.game.service.PlayerService;
 import com.game.util.ComparePlayer;
+import com.sun.net.httpserver.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,11 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class PlayerController {
@@ -35,12 +35,13 @@ public class PlayerController {
 // name=player1&title=p1&after=535852800000&pageNumber=0&pageSize=3&order=ID
     @PostMapping(value = "/rest/players")
     public ResponseEntity<?> create(@RequestBody Player player) {
-        boolean result = false;
+        //System.out.println("В метод create в контроллере пришел параметр " + player);
+       Player createdPlayer= null;
         try {
             if(player!=null) {
                 //System.out.println(player);
                 if(playerService.validation(player)) {
-                    result = playerService.create(player);
+                    createdPlayer = playerService.create(player);
                 }
             }
         }
@@ -50,8 +51,8 @@ public class PlayerController {
         }
 
         //return new ResponseEntity<>(HttpStatus.OK);
-        return result
-                ? new ResponseEntity<>(HttpStatus.OK)
+        return createdPlayer!=null
+                ? new ResponseEntity<>(player,HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
@@ -138,6 +139,7 @@ public class PlayerController {
     @RequestMapping(value = "/rest/players/{id}", method = RequestMethod.POST/*, produces = "application/json; charset=utf-8"*/)
     //@ResponseBody
     public ResponseEntity<?> update(@PathVariable(name = "id") int id, @RequestBody Player player) {
+    //public HttpStatus update(@PathVariable(name = "id") int id, @RequestBody Player player) {
 //        HttpHeaders responseHeaders = new HttpHeaders();
 //        responseHeaders.add("Content-Type", "application/json; charset=utf-8");
         //responseHeaders.setLocation(builder.path("/admin/{id}").buildAndExpand(adminCreatedEvent.getAdminId()).toUri());
@@ -145,44 +147,61 @@ public class PlayerController {
 //        System.out.println("Апдейтим игрока №" + id);
 //        if(player==null||player.isNull()){
 //            System.out.println("Игрок пустой");
+//
 //        } else {
 //            System.out.println(player);
 //        }
         try {
             boolean updated = false;
             if (id == 0) {
+                //return HttpStatus.BAD_REQUEST;
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             if (player.isNull()) {
-                return new ResponseEntity<>(HttpStatus.OK);
+                //return HttpStatus.OK;
+                //System.out.println("Игрок пустой");
+                Player player1 = playerService.read(id);
+                //player1.setId(50L);player1.setName("test"); player1.setBirthday(new Date());
+                return new ResponseEntity<>(player1,HttpStatus.OK);
             }
             if (player.getExperience() != null) {
                 if (player.getExperience() < 0 || player.getExperience() > 10000000) {
+                    //return HttpStatus.BAD_REQUEST;
                     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                 }
             }
             if (player.getBirthday() != null) {
                 if (player.getBirthday().after(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.3001"))) {
                     //System.out.println("ДР больше 01.01.3001");
+                    //return HttpStatus.BAD_REQUEST;
                     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                 }
                 if (player.getBirthday().before(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2000"))) {
                     //System.out.println("ДР меньше 01.01.2000");
+                    //return HttpStatus.BAD_REQUEST;
                     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                 }
             }
             if (!playerService.existsById(id)) {
+                //return HttpStatus.NOT_FOUND;
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
             if (!player.isNull()) {
-                updated = playerService.update(player, id);
+                Player updatedPlayer = playerService.update(player, id);
+                return new ResponseEntity<>(updatedPlayer,HttpStatus.OK);
+
             } else {
+                //return HttpStatus.OK;
                 new ResponseEntity<>(HttpStatus.OK);
             }
-        } catch (Exception ex){
-            ex.printStackTrace();
-        }
+        } catch (Exception e) {
+            e.printStackTrace();
+            //return new ResponseEntity<>(HttpStatus.OK);
+        } //ex.printStackTrace();
+
+
         return new ResponseEntity<>(HttpStatus.OK);
+        //return HttpStatus.OK;
     }
 
     @DeleteMapping(value = "/rest/players/{id}")

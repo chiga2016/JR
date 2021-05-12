@@ -63,14 +63,17 @@ public class CreatePlayerTest extends AbstractTest {
     //test6
     @Test
     public void createPlayerTest() throws Exception {
+        //System.out.println("content " + TestsHelper.BANNED_TRUE_JSON);
         ResultActions resultActions = mockMvc.perform(post("/rest/players/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(TestsHelper.BANNED_TRUE_JSON))
                 .andExpect(status().isOk());
 
         PlayerInfoTest expected = new PlayerInfoTest(41L, "Амарылис", "Прозелит", Race.DWARF, Profession.CLERIC, 988059600000L, true, 63986, 35, 2614);
+        //System.out.println("expected " + expected);
         String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
         PlayerInfoTest actual = new ObjectMapper().readValue(contentAsString, PlayerInfoTest.class);
+        //System.out.println("actual " + actual);
         assertEquals("Возвращается не правильный результат при запросе создания игрока.", expected, actual);
     }
 }
